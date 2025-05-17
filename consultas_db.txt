@@ -1,0 +1,155 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Tipo para el estado de la organización
+CREATE TYPE status_organizacion_enum AS ENUM ('Activa', 'Inactiva');
+
+-- Tipo para el estado del usuario
+CREATE TYPE status_usuario_enum AS ENUM ('Habilitado', 'Inhabilitado', 'Espera');
+
+-- Tipo para el tipo de organización
+CREATE TYPE tipo_organizacion_enum AS ENUM ('Moral', 'Física');
+
+CREATE TABLE Organizaciones (
+    id_organizacion UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre_organizacion VARCHAR(255) NOT NULL,
+    status_organizacion status_organizacion_enum NOT NULL,
+    fecha_creacion TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    tipo_organizacion VARCHAR(100)
+);
+
+CREATE TABLE Usuarios (
+    id_usuarios UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre_usuario VARCHAR(100) NOT NULL,
+    apellido_paterno VARCHAR(100) NOT NULL,
+    apellido_materno VARCHAR(100), -- Puede ser NULL
+    telefono_usuario VARCHAR(30),
+    rol_usuario VARCHAR(100) NOT NULL,
+    correo_electronico VARCHAR(320) NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL, -- Campo para almacenar la contraseña hasheada
+    segmento_usuario VARCHAR(100),
+    status_usuario status_usuario_enum NOT NULL, -- Asumiendo que status_usuario_enum ya existe
+    fecha_creacion TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    id_organizacion UUID NOT NULL,
+
+    CONSTRAINT fk_usuario_organizacion -- Nombre de constraint consistente
+        FOREIGN KEY(id_organizacion)
+        REFERENCES Organizaciones(id_organizacion) -- Asumiendo que la tabla Organizaciones ya existe
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+);
+
+CREATE TABLE Persona_Moral (
+    persona_moral_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id_organizacion UUID NOT NULL UNIQUE, -- Clave foránea y única para asegurar una relación 1 a 1 con una organización
+    razon_social VARCHAR(255) NOT NULL,
+    rfc VARCHAR(13) NOT NULL UNIQUE, -- RFC suele ser único
+    nombre_comercial VARCHAR(255),
+    website VARCHAR(255),
+    clabe VARCHAR(18) UNIQUE, -- CLABE suele ser única
+    banco VARCHAR(100),
+    regimen_fiscal VARCHAR(255) NOT NULL,
+    fecha_registro TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP, -- Fecha de registro en tu plataforma
+    no_notaria VARCHAR(50),
+    registro_publico VARCHAR(100),
+    pais VARCHAR(100),
+    estado VARCHAR(100),
+    ciudad VARCHAR(100),
+    -- Datos del Representante Legal
+    nombre_representante VARCHAR(100) NOT NULL,
+    apellido_paterno_representante VARCHAR(100) NOT NULL,
+    apellido_materno_representante VARCHAR(100),
+    fecha_nacimiento_representante DATE,
+    dni_representante VARCHAR(50), -- DNI, INE, etc.
+    tipo_documento_representante VARCHAR(100),
+    numero_documento_representante VARCHAR(50) UNIQUE, -- Número de documento suele ser único
+    fecha_expiracion_documento_representante DATE,
+    rfc_representante VARCHAR(13) UNIQUE, -- RFC del representante suele ser único
+    curp_representante VARCHAR(18) UNIQUE, -- CURP del representante suele ser única
+    correo_electronico_representante VARCHAR(255) UNIQUE,
+    telefono_representante VARCHAR(30),
+
+    CONSTRAINT fk_organizacion_moral
+        FOREIGN KEY(id_organizacion)
+        REFERENCES Organizaciones(id_organizacion)
+        ON DELETE CASCADE -- Si se borra la organización, se borra la info de persona moral
+);
+
+-- Índices para búsquedas comunes
+CREATE INDEX idx_pm_razon_social ON Persona_Moral(razon_social);
+CREATE INDEX idx_pm_rfc ON Persona_Moral(rfc);
+CREATE INDEX idx_pm_correo_representante ON Persona_Moral(correo_electronico_representante);
+
+CREATE TABLE Persona_Fisica (
+    persona_fisica_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id_organizacion UUID NOT NULL UNIQUE, -- Clave foránea y única para asegurar una relación 1 a 1 con una organización
+    rfc VARCHAR(13) NOT NULL UNIQUE, -- RFC suele ser único
+    regimen_fiscal VARCHAR(255) NOT NULL,
+    clabe VARCHAR(18) UNIQUE, -- CLABE suele ser única
+    -- Datos personales (actúan como representante o son la persona física misma)
+    nombre_representante VARCHAR(100) NOT NULL, -- Nombre de la persona física
+    apellido_paterno_representante VARCHAR(100) NOT NULL,
+    apellido_materno_representante VARCHAR(100),
+    fecha_nacimiento_representante DATE,
+    estado_civil_representante VARCHAR(50),
+    dni_representante VARCHAR(50), -- DNI, INE, etc.
+    tipo_documento_representante VARCHAR(100),
+    numero_documento_representante VARCHAR(50) UNIQUE, -- Número de documento suele ser único
+    fecha_expiracion_documento_representante DATE,
+    curp_representante VARCHAR(18) UNIQUE, -- CURP suele ser única
+    -- Dirección Fiscal / Contacto
+    calle VARCHAR(255),
+    no_exterior VARCHAR(20),
+    no_interior VARCHAR(20),
+    colonia VARCHAR(100),
+    codigo_postal VARCHAR(10),
+    pais VARCHAR(100),
+    ciudad VARCHAR(100),
+    estado VARCHAR(100),
+    correo_electronico VARCHAR(255) NOT NULL UNIQUE,
+    numero_telefonico VARCHAR(30),
+    fecha_registro TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP, -- Fecha de registro en tu plataforma
+
+
+    CONSTRAINT fk_organizacion_fisica
+        FOREIGN KEY(id_organizacion)
+        REFERENCES Organizaciones(id_organizacion)
+        ON DELETE CASCADE -- Si se borra la organización, se borra la info de persona fisica
+);
+
+-- Índices para búsquedas comunes
+CREATE INDEX idx_pf_rfc ON Persona_Fisica(rfc);
+CREATE INDEX idx_pf_curp ON Persona_Fisica(curp_representante);
+CREATE INDEX idx_pf_correo ON Persona_Fisica(correo_electronico);
+
+SELECT DISTINCT tipo_organizacion FROM Organizaciones;
+ALTER TABLE Organizaciones
+ALTER COLUMN tipo_organizacion TYPE tipo_organizacion_enum
+USING tipo_organizacion::tipo_organizacion_enum;
+SELECT COUNT(*) FROM Organizaciones WHERE tipo_organizacion IS NULL;
+
+ALTER TABLE Organizaciones
+ALTER COLUMN tipo_organizacion SET NOT NULL;
+
+CREATE TABLE Documentos_Organizacion (
+    documento_org_id UUID PRIMARY KEY DEFAULT gen_random_uuid(), -- Clave primaria para esta tabla
+    id_organizacion UUID NOT NULL UNIQUE, -- Clave foránea a la tabla Organizaciones, asegura una sola entrada de documentos por organización
+
+    -- Rutas o identificadores a los archivos de los documentos
+    -- Estas columnas almacenarán la ruta/URL/identificador del archivo. Serán NULL si el documento no se ha cargado.
+    ruta_comprobante_domicilio TEXT,
+    ruta_dni_representante TEXT, -- Asumiendo que es DNI del representante legal o persona física
+    ruta_constancia_situacion_fiscal TEXT,
+    ruta_acta_constitutiva TEXT, -- Este aplicaría principalmente a Personas Morales
+
+    -- Puedes añadir campos de metadatos comunes a todos estos si lo deseas, por ejemplo:
+    fecha_ultima_actualizacion TIMESTAMPTZ,
+
+    CONSTRAINT fk_documentos_organizacion
+        FOREIGN KEY(id_organizacion)
+        REFERENCES Organizaciones(id_organizacion)
+        ON DELETE CASCADE -- Si se borra la organización, se borra su registro de documentos
+);
+
+-- Índices
+CREATE INDEX idx_doc_org_id_organizacion ON Documentos_Organizacion(id_organizacion);
+
