@@ -1,0 +1,116 @@
+/* src/styles/LoginPage.css */
+
+.login-page-container {
+    min-height: 100vh; /* Asegura que ocupe toda la altura de la vista */
+    width: 100%;
+}
+
+.login-form-section {
+    background-color: #FAFAFA; /* Fondo blanco casi puro para la sección del formulario */
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; /* Centra el form-wrapper si es más estrecho */
+    min-height: 100vh; /* Para que la columna del formulario ocupe toda la altura en móviles */
+}
+
+.login-form-wrapper {
+    width: 100%;
+    max-width: 400px; /* Ancho máximo para el contenido del formulario */
+}
+
+.login-logo-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.login-logo-image {
+    height: 150px; /* Ajusta según tu logo */
+    margin-right: 12px;
+}
+
+.login-logo-text {
+    font-size: 28px;
+    font-weight: 600;
+    color: #192337; /* Azul muy oscuro */
+}
+
+/* Ajustes para el formulario de Ant Design */
+.login-form-section .ant-form-item-label > label {
+    color: #4b5a6e; /* Gris azulado oscuro para etiquetas */
+    font-weight: 500;
+}
+
+.login-form-section .ant-input-affix-wrapper {
+    border-radius: 6px;
+}
+.login-form-section .ant-input-lg {
+    font-size: 16px;
+}
+.login-form-section .ant-input-prefix .anticon {
+    color: #788796; /* Gris azulado medio para iconos de input */
+}
+
+
+.login-form-button {
+    background-color: #2364A8; /* Azul primario */
+    border-color: #2364A8;
+    color: #FAFAFA; /* Texto blanco */
+    font-weight: bold;
+    border-radius: 6px;
+    /* La propiedad block y size="large" ya vienen de Ant Design */
+}
+
+.login-form-button:hover,
+.login-form-button:focus {
+    background-color: #284173; /* Azul oscuro para hover */
+    border-color: #284173;
+    color: #FAFAFA !important;
+}
+
+.signup-prompt {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #4b5a6e; /* Gris azulado oscuro */
+}
+
+.signup-prompt .contact-link {
+    color: #2364A8; /* Azul primario */
+    font-weight: 500;
+}
+
+.signup-prompt .contact-link:hover {
+    color: #284173; /* Azul oscuro */
+    text-decoration: underline;
+}
+
+
+.login-banner-section {
+    background-color: #F3F3F3; /* Blanco hueso / Gris muy claro para la sección del banner */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh; /* Para que la columna del banner ocupe toda la altura */
+    padding: 20px; /* Espacio por si la imagen no es de borde a borde */
+}
+
+.login-banner-image {
+    max-width: 80%; /* Ajusta según el tamaño deseado de la imagen del banner */
+    max-height: 80vh;
+    object-fit: contain; /* Para que la imagen se escale bien sin recortarse */
+}
+
+/* Ocultar la sección del banner en pantallas pequeñas (xs, sm) según Ant Design Col props */
+/* xs={0} sm={0} ya lo hacen, pero si necesitaras más control: */
+/* @media (max-width: 767px) {
+    .login-banner-section {
+        display: none;
+    }
+    .login-form-section {
+        min-height: 100vh; // Asegura que ocupe toda la altura en móviles
+    }
+} */
