@@ -1,0 +1,113 @@
+/* src/styles/HomePage.css */
+
+.homepage-layout {
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Barra Superior --- */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 40px;
+    background-color: transparent;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.logo-image {
+    height: 100px; /* Ajusta este valor según necesites para el tamaño del logo */
+    display: block;
+}
+
+.actions-area .login-button {
+    border-color: #2364A8; /* Azul primario */
+    color: #2364A8; /* Azul primario */
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.actions-area .login-button:hover {
+    background-color: #2364A8 !important; /* Azul primario */
+    color: #FAFAFA !important; /* Texto blanco */
+}
+
+.actions-area .menu-icon {
+    font-size: 20px;
+    color: #2364A8; /* Azul primario */
+}
+
+/* --- Contenido Principal --- */
+.main-page-content {
+    flex-grow: 1;
+    display: flex;
+    padding: 0 40px;
+}
+
+.hero-content-area {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 60px;
+    padding-bottom: 60px;
+    text-align: left;
+    max-width: 700px;
+}
+
+.main-title {
+    font-size: 3.5rem !important;
+    font-weight: bold !important;
+    color: #192337 !important; /* Azul muy oscuro / Casi negro */
+    margin-bottom: 24px !important;
+    line-height: 1.2 !important;
+}
+
+.subtitle {
+    font-size: 1.1rem !important;
+    color: #4b5a6e !important; /* Gris azulado oscuro */
+    margin-bottom: 32px !important;
+    max-width: 90% !important;
+}
+
+.contact-button {
+    background-color: #2364A8 !important; /* Azul primario */
+    border-color: #2364A8 !important; /* Azul primario */
+    color: #FAFAFA !important; /* Texto blanco */
+    border-radius: 6px !important;
+    font-weight: bold !important;
+}
+
+.contact-button:hover,
+.contact-button:focus {
+    background-color: #284173 !important; /* Azul oscuro para hover */
+    border-color: #284173 !important; /* Azul oscuro para hover */
+    color: #FAFAFA !important; /* Texto blanco */
+}
+
+/* Media queries para responsividad (sin cambios de color aquí, solo layout) */
+@media (max-width: 768px) {
+    .top-bar {
+        padding: 16px 20px;
+    }
+
+    .main-page-content {
+        padding: 0 20px;
+    }
+
+    .hero-content-area {
+        align-items: center;
+        text-align: center;
+        padding-top: 40px;
+    }
+
+    .main-title {
+        font-size: 2.5rem !important;
+    }
+
+    .subtitle {
+        font-size: 1rem !important;
+        max-width: 100% !important;
+    }
+}
