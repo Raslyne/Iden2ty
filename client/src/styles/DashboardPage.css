@@ -1,0 +1,181 @@
+/* client/src/styles/DashboardPage.css */
+
+.custom-sider {
+    box-shadow: 2px 0 8px rgba(0, 21, 41, 0.2);
+    transition: width 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.custom-sider .ant-layout-sider-children {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Logo y Título en el Sider Header */
+.logo-sider-header {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 24px;
+    transition: padding 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+    flex-shrink: 0;
+}
+
+.custom-sider.collapsed .logo-sider-header {
+    padding: 0; /* Quitamos padding para que el logo se centre por el justify-content */
+    justify-content: center;
+}
+
+.sider-logo-img {
+    height: 50px;
+    transition: margin-right 0.25s cubic-bezier(0.645, 0.045, 0.355, 1), transform 0.25s cubic-bezier(0.645, 0.045, 0.355, 1), height 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+    margin-right: 12px;
+}
+
+.custom-sider.collapsed .sider-logo-img {
+    margin-right: 0;
+    height: 36px; /* Hacemos el logo un poco más pequeño cuando está colapsado */
+}
+
+.sider-logo-text {
+    opacity: 1;
+    transition: opacity 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) 0.05s, margin-left 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) 0.05s, width 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) 0.05s;
+    overflow: hidden; /* Para que el width funcione bien en la transición */
+    width: auto; /* Por defecto, que ocupe su espacio */
+}
+
+.custom-sider.collapsed .sider-logo-text {
+    opacity: 0;
+    width: 0;
+    margin-left: 0; /* Evitar que el margen afecte el espacio */
+    pointer-events: none;
+    transition-delay: 0s; /* Que desaparezca inmediatamente */
+}
+
+
+/* Menú del Sider */
+.custom-sider-menu.ant-menu-dark.ant-menu-inline {
+    background: transparent !important;
+}
+
+/* Estilos base para los ítems del menú */
+.custom-sider-menu.ant-menu-dark .ant-menu-item,
+.custom-sider-menu.ant-menu-dark .ant-menu-submenu-title {
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 4px;
+    margin-bottom: 4px;
+    width: calc(100% - 16px); /* 8px padding a cada lado */
+    margin-left: 8px;
+    margin-right: 8px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    display: flex; /* Para centrar el icono cuando está colapsado */
+    align-items: center;
+}
+
+/* Cuando el Sider está COLAPSADO */
+.custom-sider.collapsed .custom-sider-menu.ant-menu-dark .ant-menu-item,
+.custom-sider.collapsed .custom-sider-menu.ant-menu-dark .ant-menu-submenu-title {
+    width: 40px; /* Ancho del ítem, dejando espacio para padding interno del menú */
+    height: 40px;
+    padding: 0 !important; /* Resetear padding del ítem */
+    margin-left: auto; /* Centrar el bloque del ítem */
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centra el contenido (el icono) */
+}
+
+.custom-sider.collapsed .custom-sider-menu.ant-menu-dark .ant-menu-item .ant-menu-title-content,
+.custom-sider.collapsed .custom-sider-menu.ant-menu-dark .ant-menu-submenu-title .ant-menu-title-content {
+    display: none; /* Ocultar el texto del label */
+}
+
+.custom-sider.collapsed .custom-sider-menu.ant-menu-dark .ant-menu-item .ant-menu-item-icon,
+.custom-sider.collapsed .custom-sider-menu.ant-menu-dark .ant-menu-submenu-title .ant-menu-item-icon {
+    line-height: 0 !important; /* Ayuda a centrar el icono verticalmente en algunos casos */
+    margin-right: 0 !important; /* Quitar margen si el texto no está */
+}
+
+
+/* Hover y Selección */
+.custom-sider-menu.ant-menu-dark .ant-menu-item:hover,
+.custom-sider-menu.ant-menu-dark .ant-menu-submenu-title:hover {
+    color: #FFFFFF !important;
+    background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.custom-sider-menu.ant-menu-dark .ant-menu-item-selected {
+    background-color: #3670E7 !important;
+    color: #FFFFFF !important;
+}
+
+.custom-sider-menu.ant-menu-dark .ant-menu-item-selected .ant-menu-item-icon,
+.custom-sider-menu.ant-menu-dark .ant-menu-item-selected > .ant-menu-title-content {
+    color: #FFFFFF !important; /* Asegurar que el icono también cambie si es necesario */
+}
+
+.custom-sider-menu .ant-menu-item-icon,
+.custom-sider-menu .ant-menu-submenu-title .ant-menu-item-icon {
+    font-size: 20px !important; /* Iconos un poco más grandes */
+    vertical-align: middle;
+    transition: transform 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+.custom-sider-menu.ant-menu-dark .ant-menu-item-selected .ant-menu-item-icon {
+    /* transform: scale(1.1); Puedes añadir un ligero efecto al icono seleccionado */
+}
+
+
+/* Footer del Sider */
+.sider-footer {
+    padding: 20px;
+    text-align: left;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    flex-shrink: 0;
+    transition: opacity 0.25s cubic-bezier(0.645, 0.045, 0.355, 1) 0.05s, padding 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+.custom-sider.collapsed .sider-footer {
+    opacity: 0;
+    padding: 0 20px; /* Mantiene el padding horizontal para evitar saltos si vuelve a aparecer */
+    pointer-events: none;
+    transition-delay: 0s;
+}
+
+/* Header de la página */
+.dashboard-header {
+    box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+    transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.sider-collapse-button, .logout-button-header {
+    font-size: 16px;
+    width: auto;
+    height: auto;
+    padding: 12px;
+    border-radius: 4px;
+    color: rgba(0, 0, 0, 0.65);
+}
+.sider-collapse-button:hover, .logout-button-header:hover {
+    color: rgba(0, 0, 0, 0.85);
+    background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Animación de entrada para contenido */
+@keyframes fadeInSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-on-load {
+    animation: fadeInSlideUp 0.4s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+    opacity: 0;
+}
