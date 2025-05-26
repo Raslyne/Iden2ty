@@ -6,6 +6,8 @@ const cors = require('cors');
 // --- IMPORTAR RUTAS ---
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes.js'); // <--- AÑADE ESTA LÍNEA
+const organizacionRoutes = require('./routes/organizacion.routes');
+const segmentoRoutes = require('./routes/segmento.routes'); // Ajusta la ruta al archivo
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,6 +25,8 @@ app.use((req, res, next) => {
 // --- RUTAS API ---
 app.use('/api/v1/auth', authRoutes); // Prefijo para rutas de autenticación
 app.use('/api/v1/users', userRoutes); // <--- AÑADE ESTA LÍNEA (prefijo para rutas de usuarios)
+app.use('/api/v1/organizaciones', organizacionRoutes);
+app.use('/api/v1/segmentos', segmentoRoutes); // Monta las rutas de segmentos
 
 app.get('/api/test', (req, res) => {
     res.json({ message: '¡API de Iden2ty funcionando correctamente!' });
