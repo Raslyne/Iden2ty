@@ -16,7 +16,10 @@ import {
     DownOutlined,      
     KeyOutlined,       
     IdcardOutlined,    
-    InfoCircleOutlined 
+    InfoCircleOutlined,
+    FileTextOutlined,
+    MailOutlined,
+    BankOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext'; 
 import logo from '../../public/images/logo_iden2ty_white.png'; 
@@ -44,9 +47,10 @@ const DashboardPage: React.FC = () => {
     const menuRouteMapping: { [key: string]: string } = {
         '1': 'inicio',
         '2': 'organizacion',
-        '3': 'plantillas',
+        //'3': 'plantillas',
         '4': 'usuarios',
-        '5': 'configuracion',
+        '5': 'politicas',
+        //'6': 'configuracion',
     };
     
     // Mapeo inverso de rutas a keys del menú
@@ -69,9 +73,10 @@ const DashboardPage: React.FC = () => {
         // Por simplicidad, mantendré tus keys '1' a '5' y usaré el mapeo.
         { key: '1', path: 'inicio', icon: <HomeOutlined />, label: 'Inicio' },
         { key: '2', path: 'organizacion', icon: <TeamOutlined />, label: 'Organización' },
-        { key: '3', path: 'plantillas', icon: <ContainerOutlined />, label: 'Plantillas' },
-        { key: '4', path: 'usuarios', icon: <UserOutlined />, label: 'Usuarios' }, 
-        { key: '5', path: 'configuracion', icon: <SettingOutlined />, label: 'Configuración' },
+        //{ key: '3', path: 'plantillas', icon: <ContainerOutlined />, label: 'Plantillas' },
+        { key: '4', path: 'usuarios', icon: <UserOutlined />, label: 'Usuarios' },
+        { key: '5', path: 'politicas', icon: <SettingOutlined />, label: 'Configuración' }, 
+        //{ key: '6', path: 'configuracion', icon: <SettingOutlined />, label: 'Configuración' },
     ];
 
     // Modificado para navegar
@@ -110,8 +115,40 @@ const DashboardPage: React.FC = () => {
             key: 'userInfoHeader', type: 'group', label: <Text strong>{displayName}</Text>,
             children: [
                 { key: 'userRole', icon: <IdcardOutlined style={{ color: colorTextSecondary }} />, label: <Text type="secondary" style={{ fontSize: '12px' }}>Rol: {user?.rol_usuario || 'No definido'}</Text>, disabled: true, style: { cursor: 'default' } },
-                { key: 'userEmail', label: <Text type="secondary" style={{ fontSize: '12px', paddingLeft: '26px' }}>{user?.correo_electronico || 'correo@ejemplo.com'}</Text>, disabled: true, style: { cursor: 'default' } },
-                { key: 'userSegment', icon: <InfoCircleOutlined style={{ color: colorTextSecondary }} />, label: <Text type="secondary" style={{ fontSize: '12px' }}>Segmento: {user?.segmento_usuario || 'N/A'}</Text>, disabled: true, style: { cursor: 'default' } },
+                {
+                    key: 'userEmail',
+                    icon: <MailOutlined style={{ color: colorTextSecondary }} />, // <--- ÍCONO AÑADIDO
+                    label: (
+                        <Text type="secondary" style={{ fontSize: '12px' }}> {/* Se eliminó paddingLeft para alineación automática */}
+                            {user?.correo_electronico || 'correo@ejemplo.com'}
+                        </Text>
+                    ),
+                    disabled: true,
+                    style: { cursor: 'default' }
+                },                // MODIFICACIÓN AQUÍ:
+                { 
+                    key: 'userSegment', 
+                    icon: <InfoCircleOutlined style={{ color: colorTextSecondary }} />, 
+                    label: (
+                        <Text type="secondary" style={{ fontSize: '12px' }}>
+                            Segmento: {user?.segmento?.nombre || 'N/A'} 
+                        </Text>
+                    ), 
+                    disabled: true, 
+                    style: { cursor: 'default' } 
+                },
+                // NUEVO ITEM PARA LA ORGANIZACIÓN:
+                {
+                    key: 'userOrganization',
+                    icon: <BankOutlined style={{ color: colorTextSecondary }} />,
+                    label: (
+                        <Text type="secondary" style={{ fontSize: '12px' }}>
+                            Organización: {user?.organizacion?.nombre_organizacion || 'N/A'}
+                        </Text>
+                    ),
+                    disabled: true,
+                    style: { cursor: 'default' }
+                },
             ],
         },
         { type: 'divider' },

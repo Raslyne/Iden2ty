@@ -56,29 +56,27 @@ const FormularioPersonaFisica: React.FC<FormularioPersonaFisicaProps> = ({
             fecha_expiracion_documento_representante: values.fecha_expiracion_documento_representante
                 ? values.fecha_expiracion_documento_representante.format('YYYY-MM-DD')
                 : null,
+            // Simulación de rutas de archivos subidos
+            dni_representante_file: '/uploads/dni_simulado.pdf',
+            comprobante_domicilio_file: '/uploads/comprobante_simulado.pdf',
+            constancia_situacion_fiscal_file: '/uploads/situacion_simulada.pdf'
         };
-        console.log('Valores del formulario Persona Física procesados:', processedValues);
+
+        console.log('✔️ Valores del formulario Persona Física procesados:', processedValues);
+
         if (onFinish) {
             onFinish(processedValues);
         }
+
         message.success('Formulario guardado con éxito!');
     };
-
+    
     const uploadProps = {
         name: 'file',
-        action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
-        headers: {
-            authorization: 'authorization-text',
-        },
-        onChange(info: any) {
-            if (info.file.status === 'done') {
-                message.success(`${info.file.name} archivo subido exitosamente.`);
-            } else if (info.file.status === 'error') {
-                message.error(`${info.file.name} error al subir archivo.`);
-            }
-        },
+        beforeUpload: () => false, // Evita carga automática
         maxCount: 1,
     };
+
 
     const commonInputStyle: React.CSSProperties = {
         // Se mantiene vacío, usando los estilos por defecto de Ant Design
@@ -274,7 +272,7 @@ const FormularioPersonaFisica: React.FC<FormularioPersonaFisicaProps> = ({
                     key="3"
                 >
                     <Title level={4} style={{ marginBottom: '24px', color: '#457B9D' }}>Ubicación Fiscal</Title>
-                     <Row gutter={24}>
+                    <Row gutter={24}>
                         <Col xs={24} sm={12} md={10}>
                             <Form.Item name="calle" label="Calle" rules={[{ required: true, message: 'Ingresa la calle.' }]}>
                                 <Input prefix={<HomeOutlined />} placeholder="Nombre de la calle" style={commonInputStyle}/>
@@ -367,7 +365,7 @@ const FormularioPersonaFisica: React.FC<FormularioPersonaFisicaProps> = ({
                     key="6"
                 >
                     <Title level={4} style={{ marginBottom: '24px', color: '#457B9D' }}>Carga de Documentación</Title>
-                     <Row gutter={24}>
+                    <Row gutter={24}>
                         <Col xs={24} sm={12}>
                             <Form.Item
                                 name="comprobante_domicilio_file"

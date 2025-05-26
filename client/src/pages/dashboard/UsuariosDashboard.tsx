@@ -38,6 +38,13 @@ const { Search } = Input;
 const { confirm } = Modal;
 const { Option } = Select;
 
+// NUEVO: Interfaz para el objeto Segmento (debería coincidir con la de AuthContext si es posible)
+interface Segment {
+    id: string;
+    nombre: string;
+    // podrían incluirse más campos si la API los devuelve y son útiles, ej: id_organizacion, descripcion_segmento
+}
+
 // Interfaz para los datos de usuario que se mostrarán en la tabla
 interface UserData {
     key: string;
@@ -45,7 +52,7 @@ interface UserData {
     nombreCompleto: string;
     correo_electronico: string;
     rol_usuario: string;
-    segmento_usuario?: string;
+    segmento: Segment | null; // MODIFICADO: para usar el objeto Segmento o null
     status_usuario: 'Habilitado' | 'Inhabilitado' | 'Espera';
     nombre_usuario: string;
     apellido_paterno: string;
@@ -62,7 +69,7 @@ interface UserFormValues {
     apellido_materno?: string;
     telefono_usuario?: string;
     rol_usuario: string;
-    segmento_usuario: string;
+    id_segmento?: string | null; // MODIFICADO: para manejar el ID del segmento, puede ser null
     status_inicial: boolean;
 }
 
@@ -94,7 +101,40 @@ const UsuariosDashboard: React.FC = () => {
     const [editingUser, setEditingUser] = useState<UserData | null>(null); // NUEVO ESTADO: para guardar el usuario en edición
     // --- FIN: MODIFICACIÓN Y ADICIÓN DE ESTADOS PARA EL DRAWER ---
 
+    // NUEVO: Estado para almacenar los segmentos de la organización
+    const [organizationSegments, setOrganizationSegments] = useState<Segment[]>([]);
+
     const esAdminOrganizacion = ['Administrador', 'SuperAdmin'].includes(loggedInUser?.rol_usuario ?? '');
+
+    // NUEVO: Función para obtener los segmentos de la organización
+    const fetchOrganizationSegments = useCallback(async () => {
+        if (loggedInUser?.organizacion?.id_organizacion && token) {
+            try {
+                // Asumimos que tienes un endpoint como /organizaciones/{id_organizacion}/segmentos
+                // o uno más genérico como /segmentos?organizacionId={id_organizacion}
+                const response = await axiosInstance.get(`/segmentos/organizacion/${loggedInUser.organizacion.id_organizacion}`);
+                if (response.data && response.data.success && Array.isArray(response.data.segmentos)) {
+                    // Asegúrate que la respuesta de la API para segmentos sea un array de objetos con id y nombre.
+                    // Ejemplo: response.data.segmentos = [{id_segmento: 'uuid', nombre_segmento: 'Ventas', ...}, ...]
+                    // Mapeamos a la interfaz Segment local
+                    setOrganizationSegments(response.data.segmentos.map((s: any) => ({
+                        id: s.id_segmento, // Ajusta estos nombres de propiedad según tu API
+                        nombre: s.nombre_segmento
+                    })));
+                } else {
+                    console.error("Respuesta inesperada al obtener segmentos:", response.data);
+                    message.error('No se pudieron cargar los segmentos de la organización.');
+                    setOrganizationSegments([]); // Asegurar que es un array vacío
+                }
+            } catch (err) {
+                console.error("Error fetching organization segments:", err);
+                message.error('Error de conexión al cargar los segmentos.');
+                setOrganizationSegments([]); // Asegurar que es un array vacío en caso de error
+            }
+        } else {
+            setOrganizationSegments([]); // Si no hay org, no hay segmentos
+        }
+    }, [loggedInUser, token]);
 
     const fetchUsers = useCallback(async () => {
         if (loggedInUser?.organizacion?.id_organizacion && token) {
@@ -112,8 +152,14 @@ const UsuariosDashboard: React.FC = () => {
                         apellido_materno: u.apellido_materno,
                         correo_electronico: u.correo_electronico,
                         rol_usuario: u.rol_usuario,
-                        segmento_usuario: u.segmento_usuario,
-                        status_usuario: u.status_usuario,
+                        // MODIFICACIÓN: Mapear al nuevo objeto segmento
+                        segmento: u.segmento && u.segmento.id ? { // Si el backend ya anida en 'segmento'
+                            id: u.segmento.id,
+                            nombre: u.segmento.nombre
+                        } : (u.id_segmento ? { // Si el backend devuelve id_segmento y nombre_segmento al mismo nivel
+                            id: u.id_segmento,
+                            nombre: u.nombre_segmento
+                        } : null),                        status_usuario: u.status_usuario,
                         telefono_usuario: u.telefono_usuario, // <--- MODIFICACIÓN: Asegurar que se obtiene y mapea
                     }));
                     setUsers(formattedData);
@@ -139,7 +185,8 @@ const UsuariosDashboard: React.FC = () => {
 
     useEffect(() => {
         fetchUsers();
-    }, [fetchUsers]);
+        fetchOrganizationSegments(); // NUEVO: Llamar para obtener segmentos
+    }, [fetchUsers, fetchOrganizationSegments]); // Asegúrate de incluir fetchOrganizationSegments aquí
 
     // --- INICIO: MODIFICACIÓN Y ADICIÓN DE FUNCIONES PARA EL DRAWER ---
     // ANTERIORMENTE: const onCloseAddUserDrawer = () => { ... setIsAddUserDrawerVisible(false); addUserForm.resetFields(); ... };
@@ -177,7 +224,7 @@ const UsuariosDashboard: React.FC = () => {
             apellido_materno: userToEdit.apellido_materno || '',
             telefono_usuario: userToEdit.telefono_usuario || '',
             rol_usuario: userToEdit.rol_usuario,
-            segmento_usuario: userToEdit.segmento_usuario || segmentosEjemplo[0], // Valor por defecto si no tiene
+            id_segmento: userToEdit.segmento?.id || null, // MODIFICACIÓN: Usar id del segmento del usuario
             status_inicial: userToEdit.status_usuario === 'Habilitado', // Mapear status_usuario a booleano
             password_usuario: '', // No mostrar contraseña actual; campo para nueva contraseña (opcional)
         });
@@ -188,47 +235,57 @@ const UsuariosDashboard: React.FC = () => {
     // ANTERIORMENTE: const handleCreateUserSubmit = async (values: CreateUserFormValues) => { ... };
     // MODIFICACIÓN: Se reemplaza por handleFormSubmit para manejar tanto creación como edición.
     const handleFormSubmit = async (values: UserFormValues) => {
-        setIsSubmittingForm(true); // Usar el estado renombrado
+        setIsSubmittingForm(true);
 
-        const commonPayload: any = { // Payload base, correo se añade/excluye después
+        const statusInicialDirecto = form.getFieldValue('status_inicial');
+        console.log("[DEBUG] Valor leído con form.getFieldValue('status_inicial'):", statusInicialDirecto);
+
+        const allFormValuesDirecto = form.getFieldsValue();
+        console.log("[DEBUG] Todos los valores leídos con form.getFieldsValue():", allFormValuesDirecto);
+        // --- FIN: NUEVOS LOGS DE DEPURACIÓN ---
+
+        console.log("Valores del formulario recibidos en 'values' (argumento de onFinish):", values);
+
+        // MODIFICACIÓN TEMPORAL PARA EL PAYLOAD (para intentar que funcione mientras depuramos)
+        // Daremos prioridad al valor leído directamente si 'values.status_inicial' no es un booleano (ej. es undefined)
+        const statusParaPayload = typeof values.status_inicial === 'boolean'
+        ? values.status_inicial
+        : statusInicialDirecto;
+
+        // MODIFICACIÓN: El payload ahora usa id_segmento
+        const payloadBase: any = {
             nombre_usuario: values.nombre_usuario,
             apellido_paterno: values.apellido_paterno,
             apellido_materno: values.apellido_materno || null,
             telefono_usuario: values.telefono_usuario || null,
             rol_usuario: values.rol_usuario,
-            segmento_usuario: values.segmento_usuario,
-            status_usuario: values.status_inicial ? 'Habilitado' : 'Espera',
+            id_segmento: values.id_segmento || null, // Enviar el ID del segmento, o null si no hay
+            status_usuario: statusParaPayload ? 'Habilitado' : 'Espera',
         };
+        console.log("[DEBUG] Payload que se enviará (verificar status_usuario):", payloadBase);
 
         try {
             if (drawerMode === 'add') {
-                if (!values.password_usuario) { // Contraseña es requerida para nuevos usuarios
+                if (!values.password_usuario) {
                     message.error('La contraseña es obligatoria para crear un nuevo usuario.');
                     setIsSubmittingForm(false);
                     return;
                 }
                 const createPayload = {
-                    ...commonPayload,
-                    correo_electronico: values.correo_electronico, // Correo para creación
+                    ...payloadBase,
+                    correo_electronico: values.correo_electronico,
                     password_usuario: values.password_usuario,
                 };
-                await axiosInstance.post('/users/create', createPayload);
+                await axiosInstance.post('/users/create', createPayload); // El backend ya espera id_segmento
                 message.success('Usuario agregado exitosamente.');
             } else if (drawerMode === 'edit' && editingUser) {
-                // Para edición, no se envía correo (PK, no editable) ni password_usuario a menos que se quiera cambiar
-                // y el backend lo soporte (lo cual no hace el updateUser actual para password).
-                const updatePayload = { ...commonPayload }; // No incluye correo por defecto
-
-                if (values.password_usuario && values.password_usuario.length > 0) {
-                     // Si el backend manejara cambio de contraseña, aquí se añadiría al payload.
-                     // Por ahora, el backend `updateUser` no procesa `password_usuario`.
-                    message.info('La funcionalidad de cambio de contraseña desde este formulario no está implementada en el backend. La contraseña no se ha modificado.');
-                }
-                await axiosInstance.put(`/users/${editingUser.id_usuarios}`, updatePayload);
+                const updatePayload = { ...payloadBase };
+                // Lógica para password_usuario (si se implementa) se mantiene
+                await axiosInstance.put(`/users/${editingUser.id_usuarios}`, updatePayload); // El backend ya espera id_segmento
                 message.success('Usuario actualizado exitosamente.');
             }
-            onCloseDrawer(); // Cierra y resetea el drawer
-            await fetchUsers(); // Recargar la lista de usuarios
+            onCloseDrawer();
+            await fetchUsers();
         } catch (error) {
             console.error(`Error al ${drawerMode === 'add' ? 'crear' : 'actualizar'} usuario:`, error);
             let errorMessage = `Error de conexión al ${drawerMode === 'add' ? 'crear' : 'actualizar'} el usuario.`;
@@ -239,7 +296,7 @@ const UsuariosDashboard: React.FC = () => {
             }
             message.error(errorMessage);
         } finally {
-            setIsSubmittingForm(false); // Usar el estado renombrado
+            setIsSubmittingForm(false);
         }
     };
     // --- FIN: MODIFICACIÓN Y ADICIÓN DE FUNCIONES PARA EL DRAWER ---
@@ -386,8 +443,15 @@ const UsuariosDashboard: React.FC = () => {
                 return <Tag color={color}>{rol.toUpperCase()}</Tag>;
             }
         },
-        { title: 'Segmento', dataIndex: 'segmento_usuario', key: 'segmento_usuario', width: 150, ellipsis: true, render: (s) => s || 'N/A' },
-        // --- INICIO: MODIFICACIÓN COLUMNA DE ACCIONES ---
+        // MODIFICACIÓN: Columna de Segmento
+        { 
+            title: 'Segmento', 
+            dataIndex: 'segmento', // Apunta al objeto segmento
+            key: 'segmento', 
+            width: 150, 
+            ellipsis: true, 
+            render: (segmento: Segment | null) => segmento?.nombre || 'N/A' // Muestra el nombre del segmento
+        },        // --- INICIO: MODIFICACIÓN COLUMNA DE ACCIONES ---
         ...(esAdminOrganizacion ? [{ // Esta condición general se mantiene
             title: 'Acciones', key: 'acciones', width: 100, align: 'center' as const,
             render: (_: any, record: UserData) => {
@@ -443,12 +507,14 @@ const UsuariosDashboard: React.FC = () => {
         // --- FIN: MODIFICACIÓN COLUMNA DE ACCIONES ---
     ];
 
-    const filteredUsers = users.filter(user => /* ... (sin cambios en la lógica de filtrado) ... */
+    // MODIFICACIÓN: Lógica de filtrado
+    const filteredUsers = users.filter(user =>
         user.nombreCompleto?.toLowerCase().includes(searchText.toLowerCase()) ||
         user.correo_electronico?.toLowerCase().includes(searchText.toLowerCase()) ||
         user.rol_usuario?.toLowerCase().includes(searchText.toLowerCase()) ||
-        (user.segmento_usuario && user.segmento_usuario.toLowerCase().includes(searchText.toLowerCase()))
+        (user.segmento?.nombre && user.segmento.nombre.toLowerCase().includes(searchText.toLowerCase())) // Busca en segmento.nombre
     );
+
 
     const tableProps: TableProps<UserData> = { /* ... (sin cambios) ... */
         rowKey: 'key', /*columns,*/ dataSource: filteredUsers, loading, // columns se pasa abajo
@@ -496,10 +562,9 @@ const UsuariosDashboard: React.FC = () => {
                 footer={
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                         <Form.Item
-                            form={form} // MODIFICACIÓN: Usar la instancia de form renombrada
                             name="status_inicial"
+                            label="Estado Inicial del Usuario" // O el label que prefieras
                             valuePropName="checked"
-                            noStyle
                         >
                             <Switch checkedChildren="Habilitado" unCheckedChildren="En Espera" />
                         </Form.Item>
@@ -507,7 +572,7 @@ const UsuariosDashboard: React.FC = () => {
                             <Button onClick={onCloseDrawer} style={{ marginRight: 8 }}> {/* MODIFICACIÓN */}
                                 Cancelar
                             </Button>
-                            <Button onClick={() => form.submit()} type="primary" loading={isSubmittingForm}> {/* MODIFICACIÓN */}
+                            <Button onClick={() => { console.log("[DEBUG] Botón de envío clickeado. Llamando a form.submit()..."); form.submit() }} type="primary" loading={isSubmittingForm}> {/* MODIFICACIÓN */}
                                 {drawerMode === 'add' ? 'Agregar' : 'Guardar Cambios'} {/* MODIFICACIÓN: Texto dinámico */}
                             </Button>
                         </Space>
@@ -585,9 +650,17 @@ const UsuariosDashboard: React.FC = () => {
                             {rolesParaElFormulario.map(rol => (<Option key={rol} value={rol}>{rol}</Option>))}
                         </Select>
                     </Form.Item>
-                    <Form.Item name="segmento_usuario" label="Segmento" rules={[{ required: true, message: 'Por favor, selecciona un segmento.' }]}>
-                        <Select placeholder="Selecciona un segmento">
-                            {segmentosEjemplo.map(segmento => (<Option key={segmento} value={segmento}>{segmento}</Option>))}
+                    <Form.Item 
+                        name="id_segmento" // Cambiado de segmento_usuario a id_segmento
+                        label="Segmento" 
+                        rules={[{ required: false, message: 'Por favor, selecciona un segmento.' }]} // Hacer opcional si un usuario puede no tener segmento
+                    >
+                        <Select placeholder="Selecciona un segmento" allowClear>
+                            {organizationSegments.map(segmento => (
+                                <Option key={segmento.id} value={segmento.id}> 
+                                    {segmento.nombre}
+                                </Option>
+                            ))}
                         </Select>
                     </Form.Item>
                 </Form>

@@ -95,12 +95,12 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh; /* Para que la columna del banner ocupe toda la altura */
-    padding: 20px; /* Espacio por si la imagen no es de borde a borde */
+    padding: 5px; /* Espacio por si la imagen no es de borde a borde */
 }
 
 .login-banner-image {
-    max-width: 80%; /* Ajusta según el tamaño deseado de la imagen del banner */
-    max-height: 80vh;
+    max-width: 100%; /* Ajusta según el tamaño deseado de la imagen del banner */
+    max-height: 100vh;
     object-fit: contain; /* Para que la imagen se escale bien sin recortarse */
 }
 

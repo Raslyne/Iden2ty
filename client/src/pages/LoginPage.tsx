@@ -106,7 +106,7 @@ interface LoginFormData {
                 </div>
             </Col>
             <Col xs={0} sm={0} md={12} lg={14} xl={16} className="login-banner-section">
-                <img src="/images/004_lorem.jpg" alt="Login Banner" className="login-banner-image" />
+                <img src="../../public/images/blue-geometric-fo3um3hn07elucmn.jpg" alt="Login Banner" className="login-banner-image" />
             </Col>
         </Row>
     );

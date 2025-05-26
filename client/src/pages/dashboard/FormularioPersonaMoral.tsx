@@ -52,21 +52,26 @@ const FormularioPersonaMoral: React.FC<FormularioPersonaMoralProps> = ({
     const onFormFinish = (values: any) => {
         const processedValues = {
             ...values,
-            fecha_registro_empresa: values.fecha_registro_empresa
-                ? values.fecha_registro_empresa.format('YYYY-MM-DD')
-                : null,
             fecha_nacimiento_representante: values.fecha_nacimiento_representante
                 ? values.fecha_nacimiento_representante.format('YYYY-MM-DD')
                 : null,
             fecha_expiracion_documento_representante: values.fecha_expiracion_documento_representante
                 ? values.fecha_expiracion_documento_representante.format('YYYY-MM-DD')
                 : null,
+            // Simulación de rutas de archivos subidos
+            dni_representante_file: '/uploads/dni_simulado.pdf',
+            comprobante_domicilio_file: '/uploads/comprobante_simulado.pdf',
+            constancia_situacion_fiscal_file: '/uploads/situacion_simulada.pdf',
+            acta_constitutiva_file: '/uploads/acta_simulada.pdf'
         };
-        console.log('Valores del formulario Persona Moral procesados:', processedValues);
+
+        console.log('✔️ Valores del formulario Persona Moral procesados:', processedValues);
+
         if (onFinish) {
             onFinish(processedValues);
         }
-        message.success('Formulario de Persona Moral guardado con éxito!');
+
+        message.success('Formulario guardado con éxito!');
     };
 
     const uploadProps = {

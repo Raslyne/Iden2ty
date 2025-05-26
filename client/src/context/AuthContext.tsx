@@ -3,7 +3,14 @@ import React, { createContext, useState, useEffect, type ReactNode, useContext }
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-// ... (interfaz User y AuthContextType permanecen igual) ...
+// --- INICIO DE MODIFICACIONES ---
+// 1. Definir la interfaz para el objeto Segmento
+interface UserSegment {
+    id: string;
+    nombre: string;
+}
+
+// 2. Actualizar la interfaz User
 interface User {
     id_usuarios: string;
     nombre_usuario: string;
@@ -11,39 +18,43 @@ interface User {
     apellido_materno?: string;
     correo_electronico: string;
     rol_usuario: string;
-    segmento_usuario?: string;
+    segmento: UserSegment | null; // MODIFICADO: de segmento_usuario?: string; a esto
     organizacion: {
         id_organizacion: string;
         nombre_organizacion: string;
         status: string;
     };
-    }
+}
+// --- FIN DE MODIFICACIONES ---
 
-    interface AuthContextType {
+interface AuthContextType {
     isAuthenticated: boolean;
     user: User | null;
     token: string | null;
     isLoading: boolean;
     login: (token: string, userData: User) => void;
     logout: () => void;
-    }
+}
 
-    const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-    interface AuthProviderProps {
+interface AuthProviderProps {
     children: ReactNode;
-    }
+}
 
-
-    export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [token, setToken] = useState<string | null>(localStorage.getItem('authToken'));
     const [user, setUser] = useState<User | null>(() => {
         const storedUser = localStorage.getItem('authUser');
         try {
-        return storedUser ? JSON.parse(storedUser) : null;
+            // Cuando se parsee, se esperará la nueva estructura de User
+            return storedUser ? JSON.parse(storedUser) as User : null; 
         } catch (error) {
-        console.error("Error al parsear usuario desde localStorage:", error);
-        return null;
+            console.error("Error al parsear usuario desde localStorage:", error);
+            // Si hay un error (posiblemente por estructura vieja), limpiar para evitar problemas
+            localStorage.removeItem('authUser'); 
+            localStorage.removeItem('authToken'); // También el token por consistencia
+            return null;
         }
     });
     const [isLoading, setIsLoading] = useState(true);
@@ -53,29 +64,46 @@ interface User {
         const storedToken = localStorage.getItem('authToken');
         const storedUser = localStorage.getItem('authUser');
         if (storedToken && storedUser) {
-        setToken(storedToken);
-        try {
-            setUser(JSON.parse(storedUser));
-            axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-        } catch (error) {
-            console.error("Error al parsear usuario desde localStorage en useEffect:", error);
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('authUser');
-            setToken(null);
-            setUser(null);
-            delete axios.defaults.headers.common['Authorization'];
-        }
+            setToken(storedToken);
+            try {
+                // Asegurar que el parseo corresponda a la nueva interfaz User
+                const parsedUser = JSON.parse(storedUser) as User; 
+                
+                // Verificación adicional opcional (runtime check) si quieres ser muy cuidadoso
+                // durante la transición de estructuras de datos en localStorage:
+                if (parsedUser && typeof parsedUser.segmento_usuario !== 'undefined') {
+                     // Esto indica que es la estructura VIEJA. Forzar logout o migrar.
+                    console.warn("Estructura de usuario antigua detectada en localStorage. Limpiando sesión.");
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('authUser');
+                    setToken(null);
+                    setUser(null);
+                    delete axios.defaults.headers.common['Authorization'];
+                    setIsLoading(false); // Asegurar que isLoading se actualice
+                    return; // Salir temprano del useEffect
+                }
+
+                setUser(parsedUser);
+                axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+            } catch (error) {
+                console.error("Error al parsear usuario desde localStorage en useEffect:", error);
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('authUser');
+                setToken(null);
+                setUser(null);
+                delete axios.defaults.headers.common['Authorization'];
+            }
         }
         setIsLoading(false);
     }, []);
 
-    const login = (newToken: string, userData: User) => {
+    const login = (newToken: string, userData: User) => { // userData ya debería venir con la nueva estructura desde la API
         localStorage.setItem('authToken', newToken);
-        localStorage.setItem('authUser', JSON.stringify(userData));
+        localStorage.setItem('authUser', JSON.stringify(userData)); // Se guarda la nueva estructura
         setToken(newToken);
         setUser(userData);
         axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-        navigate('/dashboard'); // <--- ¡CAMBIO AQUÍ! Redirige a /dashboard
+        navigate('/dashboard');
     };
 
     const logout = () => {
@@ -89,7 +117,7 @@ interface User {
 
     return (
         <AuthContext.Provider value={{ isAuthenticated: !!token, user, token, isLoading, login, logout }}>
-        {children}
+            {children}
         </AuthContext.Provider>
     );
 };

@@ -14,6 +14,7 @@ import OrganizacionDashboard from './pages/dashboard/OrganizacionDashboard'; // 
 import PlantillasDashboard from './pages/dashboard/PlantillasDashboard'; // Ejemplo de ruta
 import UsuariosDashboard from './pages/dashboard/UsuariosDashboard'; // Ejemplo de ruta
 import ConfiguracionDashboard from './pages/dashboard/ConfiguracionDashboard'; // Ejemplo de ruta
+import PoliticasDashboard from './pages/dashboard/PoliticasDashboard';
 
 const App: React.FC = () => {
   return (
@@ -35,6 +36,7 @@ const App: React.FC = () => {
             <Route path="plantillas" element={<PlantillasDashboard />} />
             <Route path="usuarios" element={<UsuariosDashboard />} />
             <Route path="configuracion" element={<ConfiguracionDashboard />} />
+            <Route path="politicas" element={<PoliticasDashboard />} />
           </Route>
           {/* Puedes añadir más rutas protegidas aquí si las necesitas al mismo nivel que /dashboard */}
           {/* Ejemplo: <Route path="/profile" element={<ProfilePage />} /> */}
